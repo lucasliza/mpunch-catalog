@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ptBr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estatísticas do Catálogo de Charges</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" />
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilos globais e de corpo */
+        :root {
+            --primary-color: #3182ce;
+            --secondary-color: #2d3748;
+            --background-gradient: linear-gradient(135deg, #1e3a5f 0%, #2c5282 50%, #3182ce 100%);
+            --card-background: rgba(255, 255, 255, 0.98);
+            --border-color: #e2e8f0;
+            --text-color-muted: #4a5568;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background-gradient);
+            min-height: 100vh;
+            color: var(--secondary-color);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-background);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: #fff;
+            padding: 2rem;
+            border-bottom: 2px solid var(--primary-color);
+            text-align: center;
+            border-radius: 12px 12px 0 0;
+        }
+
+        h1,
+        h2 {
+            font-weight: 700;
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #fff;
+            background-color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background-color: #2c5282;
+            transform: translateY(-2px);
+        }
+
+        /* Seção de estatísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .text-gray-600 {
+            color: var(--text-color-muted);
+        }
+
+        /* Seção de gráficos */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        #network-container {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            height: 1000px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Estatísticas do Catálogo de charges</h1>
+            <p>1855 - 1860</p>
+            <a href="index.html" class="nav-link">Voltar ao Catálogo</a>
+        </header>
+
+        <main class="main-content">
+            <div class="chart-section">
+                <div class="chart-controls">
+                    <p class="text-gray-600">
+                        Cada nó representa um tema. A espessura da linha (aresta) indica a frequência com que dois temas
+                        co-ocorrem.
+                    </p>
+                </div>
+                <div id="network-container"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- Global Variables ---
+        let allCartoons = [];
+        let network;
+        let visData; // Adicionada uma variável global para os dados da rede
+
+        // --- Funções de Inicialização ---
+        function loadCartoonData() {
+            fetch('./data/cartoons.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`Loaded ${data.length} cartoons from JSON file`);
+                    allCartoons = data;
+
+                    renderCoOccurrenceGraph(allCartoons);
+                })
+                .catch(error => {
+                    console.log('Could not load external data file, using sample data:', error.message);
+                    // Use minimal sample data for demo
+                    allCartoons = [
+                        {
+                            id: 1,
+                            title: "Sample Historical Cartoon",
+                            caption: "Demo data for testing",
+                            content: "This is sample data to demonstrate the interface while your actual data loads.",
+                            category: "Demo",
+                            year: 1890,
+                            has_author_signature: true,
+                            has_engraver_signature: false,
+                            author_name: "Demo Author",
+                            engraver_name: "Demo Engraver",
+                            themes: ["Sample", "Demo"],
+                            topic: "Testing"
+                        }
+                    ];
+                    renderCoOccurrenceGraph(allCartoons);
+                });
+        }
+
+        // --- Graph Rendering and Filtering Functions ---
+        function renderCoOccurrenceGraph(data) {
+            // Conta a frequência de cada tema e de cada par de temas
+            const themeCounts = {};
+            const themePairs = {};
+
+            data.forEach(cartoon => {
+                if (cartoon.themes && cartoon.themes.length > 0) {
+                    cartoon.themes.forEach(theme => {
+                        themeCounts[theme] = (themeCounts[theme] || 0) + 1;
+                    });
+
+                    if (cartoon.themes.length > 1) {
+                        cartoon.themes.forEach((theme1, i) => {
+                            cartoon.themes.slice(i + 1).forEach(theme2 => {
+                                const pair = [theme1, theme2].sort().join('-');
+                                themePairs[pair] = (themePairs[pair] || 0) + 1;
+                            });
+                        });
+                    }
+                }
+            });
+
+            // Cria a lista de nós (temas)
+            const nodes = Object.keys(themeCounts).map((theme, index) => ({
+                id: theme,
+                label: theme,
+                value: themeCounts[theme],
+                title: `Ocorrências: ${themeCounts[theme]}`
+            }));
+
+            // Cria a lista de arestas (conexões)
+            const edges = [];
+            for (const pair in themePairs) {
+                const [fromTheme, toTheme] = pair.split('-');
+                const count = themePairs[pair];
+                edges.push({
+                    from: fromTheme,
+                    to: toTheme,
+                    value: count,
+                    title: `Co-ocorrências [${fromTheme}, ${toTheme}]: ${count}`,
+                    color: {
+                        color: '#666',
+                        highlight: '#3182ce'
+                    }
+                });
+            }
+
+            // Cria o objeto de dados para o vis.js
+            visData = {
+                nodes: new vis.DataSet(nodes),
+                edges: new vis.DataSet(edges)
+            };
+
+            // Configura as opções de visualização do gráfico
+            const options = {
+                layout: {
+                    improvedLayout: true,
+                    clusterThreshold: 10000,
+                    hierarchical: {
+                        enabled: false,
+                        levelSeparation: 10,
+                        nodeSpacing: 10000,
+                        treeSpacing: 3000,
+                        blockShifting: true,
+                        edgeMinimization: true,
+                        parentCentralization: true,
+                        direction: 'UD',        // UD, DU, LR, RL
+                        sortMethod: 'hubsize',  // hubsize, directed
+                        shakeTowards: 'leaves'  // roots, leaves
+                    }
+                }, nodes: {
+                    shape: 'dot',
+                    scaling: {
+                        min: 5,
+                        max: 50,
+                        label: {
+                            min: 8,
+                            max: 30,
+                            drawThreshold: 10,
+                            maxVisible: 50,
+                        },
+                    },
+                          font: {
+        size: 12,
+        face: 'Tahoma',
+        background: '#FFFFFF'
+      },
+                },
+                physics: {
+      barnesHut: {
+        gravitationalConstant: -1000000,
+        centralGravity: 1,
+        springLength: 500,
+        avoidOverlap: 1,
+      },
+                },
+                edges: {
+                    arrowStrikethrough: false,
+                    arrows: {
+                        to: {
+                            enabled: false
+                        }
+                    },
+                    scaling: {
+                        min: 0,
+                        max: 10
+                    },
+                    smooth: {
+                        type: 'curvedCW',
+                        roundness: 0
+                    },
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200,
+                }
+            };
+
+            // Cria a instância do gráfico
+            const container = document.getElementById('network-container');
+            network = new vis.Network(container, visData, options);
+
+            // Desabilita a física após a rede se estabilizar
+            network.once('stabilized', function () {
+                network.setOptions({ physics: false });
+            });
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCartoonData();
+        });
+    </script>
+</body>
+
+</html>

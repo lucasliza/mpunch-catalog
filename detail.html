@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Charge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 50%, #3182ce 100%);
+            min-height: 100vh;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            min-height: 100vh;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 3px solid #3182ce;
+        }
+
+        .back-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: 'Georgia', serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-2px);
+        }
+
+        .header-title {
+            flex: 1;
+        }
+
+        .header-title h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .header-title p {
+            opacity: 0.9;
+            font-style: italic;
+            color: #cbd5e0;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 40px;
+            padding: 40px;
+            min-height: calc(100vh - 120px);
+        }
+
+        .image-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .image-container {
+            position: relative;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-wrapper {
+            position: relative;
+            overflow: hidden;
+            background: white;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .image-wrapper.panning {
+            cursor: grabbing;
+        }
+
+        .main-image {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+            display: block;
+            transform-origin: center center;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            font-size: 4rem;
+            padding: 60px;
+            background: linear-gradient(45deg, #f7fafc, #edf2f7);
+        }
+
+        .image-placeholder p {
+            font-size: 1rem;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        .image-controls {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .zoom-button {
+            background: #3182ce;
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 100px;
+        }
+
+        .zoom-button:hover:not(:disabled) {
+            background: #2c5282;
+            transform: translateY(-1px);
+        }
+
+        .zoom-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .zoom-info {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: 'Georgia', serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .zoom-help {
+            font-size: 0.8rem;
+            color: #718096;
+            text-align: center;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .details-section {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .cartoon-title {
+            font-size: 2.2rem;
+            color: #1a202c;
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .cartoon-caption {
+            font-size: 1.1rem;
+            color: #3182ce;
+            font-style: italic;
+            font-weight: 500;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(49, 130, 206, 0.05);
+            border-left: 4px solid #3182ce;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .detail-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-card h3 {
+            color: #1a202c;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #f7fafc;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #4a5568;
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+
+        .detail-value {
+            color: #2d3748;
+            font-weight: 500;
+            text-align: right;
+            flex: 1;
+        }
+
+        .signatures-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .signature-badge {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .signature-author {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .signature-engraver {
+            background: #bee3f8;
+            color: #1a365d;
+            border: 1px solid #90cdf4;
+        }
+
+        .signature-none {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .description-section {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .description-section h3 {
+            color: #1a202c;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .description-text {
+            color: #4a5568;
+            line-height: 1.7;
+            font-size: 1rem;
+            text-align: justify;
+        }
+
+        .themes-container {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .themes-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .theme-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .theme-tag {
+            background: linear-gradient(135deg, #2d3748, #4a5568);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #4a5568;
+            font-size: 1.2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #3182ce;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #e53e3e;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .error h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .error p {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+        }
+
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .fullscreen-image {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 20px;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+
+            .header-title h1 {
+                font-size: 1.5rem;
+            }
+
+            .cartoon-title {
+                font-size: 1.8rem;
+            }
+
+            .detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .detail-value {
+                text-align: left;
+            }
+
+            .signatures-container {
+                justify-content: flex-start;
+            }
+
+            .image-controls {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .zoom-button {
+                min-width: auto;
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Loading State -->
+        <div class="loading" id="loadingState">
+            <div class="spinner"></div>
+            <p>Carregando detalhes da charge...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error" id="errorState" style="display: none;">
+            <h2>Erro ao Carregar</h2>
+            <p>Não foi possível encontrar os dados da charge solicitada.</p>
+            <button class="back-button" onclick="window.history.back()">
+                ← Voltar ao Catálogo
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div id="mainContent" style="display: none;">
+            <div class="header">
+                <button class="back-button" onclick="window.history.back()">
+                    ← Voltar ao Catálogo
+                </button>
+                <div class="header-title">
+                    <h1>Detalhes da Charge</h1>
+                    <p>Catálogo de Pesquisa - Coleção de charges de Melbourne Punch (1855-1860)</p>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="image-section">
+                    <div class="image-container">
+                        <div class="image-wrapper" id="imageWrapper">
+                            <div class="image-placeholder" id="imagePlaceholder">
+                                🖼️
+                                <p>Imagem não disponível</p>
+                            </div>
+                            <img class="main-image" id="mainImage" style="display: none;" alt="Cartoon Image">
+                        </div>
+                        <div class="image-controls">
+                            <button class="zoom-button" id="zoomOutBtn" disabled>
+                                🔍 Reduzir
+                            </button>
+                            <div class="zoom-info" id="zoomInfo">100%</div>
+                            <button class="zoom-button" id="zoomInBtn">
+                                🔍 Ampliar
+                            </button>
+                            <button class="zoom-button" id="resetZoomBtn">
+                                ↺ Reset
+                            </button>
+                            <button class="zoom-button" id="fullscreenBtn">
+                                ⛶ Tela Cheia
+                            </button>
+                        </div>
+                        <div class="zoom-help">
+                            Use a roda do mouse para zoom • Arraste para mover • Duplo clique para reset
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <div>
+                        <h1 class="cartoon-title" id="cartoonTitle">Título da Charge</h1>
+                        <div class="cartoon-caption" id="cartoonCaption">"Legenda da charge"</div>
+                    </div>
+
+                    <div class="detail-card">
+                        <h3>Informações Básicas</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Formato:</span>
+                            <span class="detail-value" id="cartoonCategory">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Ano de publicação:</span>
+                            <span class="detail-value" id="cartoonYear">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tema:</span>
+                            <span class="detail-value" id="cartoonTopic">-</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-card">
+                        <h3>Autoria</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Autor:</span>
+                            <span class="detail-value" id="cartoonAuthor">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Gravador:</span>
+                            <span class="detail-value" id="cartoonEngraver">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Assinaturas:</span>
+                            <div class="signatures-container" id="signaturesContainer">
+                                <!-- Signature badges will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="description-section">
+                        <h3>Conteúdo</h3>
+                        <p class="description-text" id="cartoonDescription">
+                            Descrição detalhada do conteúdo da charge será exibida aqui.
+                        </p>
+                        
+                        <div class="themes-container" id="themesContainer" style="display: none;">
+                            <h4 class="themes-title">Temas Identificados:</h4>
+                            <div class="theme-tags" id="themeTags">
+                                <!-- Theme tags will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Overlay -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <button class="fullscreen-close" id="fullscreenClose">&times;</button>
+        <img class="fullscreen-image" id="fullscreenImage" alt="Cartoon Image">
+    </div>
+
+    <script>
+        class ImageZoomPan {
+            constructor(containerSelector, imageSelector) {
+                this.container = document.querySelector(containerSelector);
+                this.image = document.querySelector(imageSelector);
+                this.zoomLevel = 1;
+                this.minZoom = 0.5;
+                this.maxZoom = 5;
+                this.zoomStep = 0.1;
+                
+                this.isPanning = false;
+                this.startX = 0;
+                this.startY = 0;
+                this.translateX = 0;
+                this.translateY = 0;
+                
+                // Touch handling
+                this.lastTouchDistance = 0;
+                this.lastTouchCenter = { x: 0, y: 0 };
+                
+                this.init();
+            }
+            
+            init() {
+                if (!this.image || !this.container) return;
+                
+                this.setupEventListeners();
+                this.updateTransform();
+                this.updateZoomInfo();
+            }
+            
+            setupEventListeners() {
+                // Mouse events
+                this.container.addEventListener('wheel', this.handleWheel.bind(this), { passive: false });
+                this.container.addEventListener('mousedown', this.handleMouseDown.bind(this));
+                this.container.addEventListener('mousemove', this.handleMouseMove.bind(this));
+                this.container.addEventListener('mouseup', this.handleMouseUp.bind(this));
+                this.container.addEventListener('mouseleave', this.handleMouseUp.bind(this));
+                this.container.addEventListener('dblclick', this.handleDoubleClick.bind(this));
+                
+                // Touch events
+                this.container.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+                this.container.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+                this.container.addEventListener('touchend', this.handleTouchEnd.bind(this));
+                
+                // Prevent context menu
+                this.container.addEventListener('contextmenu', e => e.preventDefault());
+                
+                // Prevent image drag
+                this.image.addEventListener('dragstart', e => e.preventDefault());
+            }
+            
+            handleWheel(e) {
+                e.preventDefault();
+                
+                const rect = this.container.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const delta = e.deltaY > 0 ? -this.zoomStep : this.zoomStep;
+                this.zoomAt(mouseX, mouseY, delta);
+            }
+            
+            zoomAt(x, y, delta) {
+                const oldZoom = this.zoomLevel;
+                const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, oldZoom + delta));
+                
+                if (newZoom === oldZoom) return;
+                
+                const factor = newZoom / oldZoom;
+                
+                // Calculate center of container
+                const containerRect = this.container.getBoundingClientRect();
+                const centerX = containerRect.width / 2;
+                const centerY = containerRect.height / 2;
+                
+                // Use mouse position or center
+                const focusX = x !== undefined ? x : centerX;
+                const focusY = y !== undefined ? y : centerY;
+                
+                // Adjust translation to zoom towards focus point
+                this.translateX = focusX - factor * (focusX - this.translateX);
+                this.translateY = focusY - factor * (focusY - this.translateY);
+                
+                this.zoomLevel = newZoom;
+                this.constrainPan();
+                this.updateTransform();
+                this.updateZoomInfo();
+                this.updateControls();
+            }
+            
+            handleMouseDown(e) {
+                if (e.button !== 0) return; // Only left mouse button
+                
+                this.isPanning = true;
+                this.container.classList.add('panning');
+                
+                this.startX = e.clientX - this.translateX;
+                this.startY = e.clientY - this.translateY;
+                
+                e.preventDefault();
+            }
+            
+            handleMouseMove(e) {
+                if (!this.isPanning) return;
+                
+                this.translateX = e.clientX - this.startX;
+                this.translateY = e.clientY - this.startY;
+                
+                this.constrainPan();
+                this.updateTransform();
+                
+                e.preventDefault();
+            }
+            
+            handleMouseUp(e) {
+                this.isPanning = false;
+                this.container.classList.remove('panning');
+            }
+            
+            handleDoubleClick(e) {
+                e.preventDefault();
+                this.resetZoom();
+            }
+            
+            // Touch handling
+            handleTouchStart(e) {
+                e.preventDefault();
+                
+                if (e.touches.length === 1) {
+                    // Single touch - panning
+                    const touch = e.touches[0];
+                    this.isPanning = true;
+                    this.startX = touch.clientX - this.translateX;
+                    this.startY = touch.clientY - this.translateY;
+                    this.container.classList.add('panning');
+                } else if (e.touches.length === 2) {
+                    // Two finger touch - zooming
+                    this.isPanning = false;
+                    this.container.classList.remove('panning');
+                    
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    
+                    this.lastTouchDistance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+                    
+                    this.lastTouchCenter = {
+                        x: (touch1.clientX + touch2.clientX) / 2,
+                        y: (touch1.clientY + touch2.clientY) / 2
+                    };
+                }
+            }
+            
+            handleTouchMove(e) {
+                e.preventDefault();
+                
+                if (e.touches.length === 1 && this.isPanning) {
+                    // Single touch panning
+                    const touch = e.touches[0];
+                    this.translateX = touch.clientX - this.startX;
+                    this.translateY = touch.clientY - this.startY;
+                    
+                    this.constrainPan();
+                    this.updateTransform();
+                } else if (e.touches.length === 2) {
+                    // Two finger zoom
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    
+                    const distance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+                    
+                    const center = {
+                        x: (touch1.clientX + touch2.clientX) / 2,
+                        y: (touch1.clientY + touch2.clientY) / 2
+                    };
+                    
+                    if (this.lastTouchDistance > 0) {
+                        const scale = distance / this.lastTouchDistance;
+                        const delta = (scale - 1) * this.zoomLevel;
+                        
+                        const rect = this.container.getBoundingClientRect();
+                        const localX = center.x - rect.left;
+                        const localY = center.y - rect.top;
+                        
+                        this.zoomAt(localX, localY, delta);
+                    }
+                    
+                    this.lastTouchDistance = distance;
+                    this.lastTouchCenter = center;
+                }
+            }
+            
+            handleTouchEnd(e) {
+                this.isPanning = false;
+                this.container.classList.remove('panning');
+                this.lastTouchDistance = 0;
+            }
+            
+            constrainPan() {
+                if (this.zoomLevel <= 1) {
+                    this.translateX = 0;
+                    this.translateY = 0;
+                    return;
+                }
+                
+                const containerRect = this.container.getBoundingClientRect();
+                const imageRect = this.image.getBoundingClientRect();
+                
+                // Calculate the scaled image dimensions
+                const scaledWidth = imageRect.width * this.zoomLevel;
+                const scaledHeight = imageRect.height * this.zoomLevel;
+                
+                // Calculate boundaries
+                const maxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2);
+                const maxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2);
+                
+                this.translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, this.translateX));
+                this.translateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, this.translateY));
+            }
+            
+            updateTransform() {
+                if (!this.image) return;
+                
+                this.image.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.zoomLevel})`;
+            }
+            
+            updateZoomInfo() {
+                const zoomInfo = document.getElementById('zoomInfo');
+                if (zoomInfo) {
+                    zoomInfo.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+                }
+            }
+            
+            updateControls() {
+                const zoomInBtn = document.getElementById('zoomInBtn');
+                const zoomOutBtn = document.getElementById('zoomOutBtn');
+                
+                if (zoomInBtn) {
+                    zoomInBtn.disabled = this.zoomLevel >= this.maxZoom;
+                }
+                
+                if (zoomOutBtn) {
+                    zoomOutBtn.disabled = this.zoomLevel <= this.minZoom;
+                }
+            }
+            
+            zoomIn() {
+                this.zoomAt(undefined, undefined, this.zoomStep * 3);
+            }
+            
+            zoomOut() {
+                this.zoomAt(undefined, undefined, -this.zoomStep * 3);
+            }
+            
+            resetZoom() {
+                this.zoomLevel = 1;
+                this.translateX = 0;
+                this.translateY = 0;
+                this.updateTransform();
+                this.updateZoomInfo();
+                this.updateControls();
+            }
+            
+            destroy() {
+                // Remove all event listeners if needed
+                this.container.replaceWith(this.container.cloneNode(true));
+            }
+        }
+
+        // Main application logic
+        let cartoon = null;
+        let zoomPan = null;
+
+        // DOM Elements
+        const loadingState = document.getElementById('loadingState');
+        const errorState = document.getElementById('errorState');
+        const mainContent = document.getElementById('mainContent');
+        const mainImage = document.getElementById('mainImage');
+        const imagePlaceholder = document.getElementById('imagePlaceholder');
+        const imageWrapper = document.getElementById('imageWrapper');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const resetZoomBtn = document.getElementById('resetZoomBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+        const fullscreenImage = document.getElementById('fullscreenImage');
+        const fullscreenClose = document.getElementById('fullscreenClose');
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCartoonData();
+            setupEventListeners();
+        });
+
+        // Load cartoon data from localStorage
+        function loadCartoonData() {
+            try {
+                const cartoonData = localStorage.getItem('selectedCartoon');
+                
+                if (!cartoonData) {
+                    showError();
+                    return;
+                }
+
+                cartoon = JSON.parse(cartoonData);
+                populateCartoonDetails();
+                showMainContent();
+                
+            } catch (error) {
+                console.error('Error loading cartoon data:', error);
+                showError();
+            }
+        }
+
+        // Show main content
+        function showMainContent() {
+            loadingState.style.display = 'none';
+            errorState.style.display = 'none';
+            mainContent.style.display = 'block';
+        }
+
+        // Show error state
+        function showError() {
+            loadingState.style.display = 'none';
+            mainContent.style.display = 'none';
+            errorState.style.display = 'flex';
+        }
+
+        // Populate cartoon details
+        function populateCartoonDetails() {
+            // Basic info
+            document.getElementById('cartoonTitle').textContent = cartoon.title || 'Título não disponível';
+            document.getElementById('cartoonCaption').textContent = `"${cartoon.caption || 'Sem legenda'}"`;
+            document.getElementById('cartoonCategory').textContent = cartoon.category || 'N/A';
+            document.getElementById('cartoonYear').textContent = cartoon.year || 'N/A';
+            document.getElementById('cartoonTopic').textContent = cartoon.topic || 'N/A';
+            document.getElementById('cartoonAuthor').textContent = cartoon.author_name || 'N/A';
+            document.getElementById('cartoonEngraver').textContent = cartoon.engraver_name || 'N/A';
+            document.getElementById('cartoonDescription').innerHTML = cartoon.content || 'Sem transcrição disponível.';
+
+            // Handle image
+            if (cartoon.image_url) {
+                mainImage.src = cartoon.image_url;
+                mainImage.alt = cartoon.title || 'Historical Cartoon';
+                mainImage.style.display = 'block';
+                imagePlaceholder.style.display = 'none';
+                fullscreenImage.src = cartoon.image_url;
+                
+                // Initialize zoom/pan functionality after image loads
+                mainImage.onload = () => {
+                    initializeZoomPan();
+                };
+                
+                // Enable controls
+                zoomInBtn.disabled = false;
+                fullscreenBtn.disabled = false;
+            } else {
+                mainImage.style.display = 'none';
+                imagePlaceholder.style.display = 'flex';
+                zoomInBtn.disabled = true;
+                fullscreenBtn.disabled = true;
+            }
+
+            // Handle signatures
+            generateSignatureBadges();
+
+            // Handle themes
+            if (cartoon.themes && cartoon.themes.length > 0) {
+                const themesContainer = document.getElementById('themesContainer');
+                const themeTags = document.getElementById('themeTags');
+                
+                themeTags.innerHTML = cartoon.themes
+                    .map(theme => `<span class="theme-tag">${theme}</span>`)
+                    .join('');
+                themesContainer.style.display = 'block';
+            }
+        }
+
+        // Initialize zoom/pan functionality
+        function initializeZoomPan() {
+            if (zoomPan) {
+                zoomPan.destroy();
+            }
+            zoomPan = new ImageZoomPan('#imageWrapper', '#mainImage');
+        }
+
+        // Generate signature badges
+        function generateSignatureBadges() {
+            const container = document.getElementById('signaturesContainer');
+            let badges = '';
+            
+            if (cartoon.has_author_signature) {
+                badges += '<span class="signature-badge signature-author">✓ Autor</span>';
+            }
+            
+            if (cartoon.has_engraver_signature) {
+                badges += '<span class="signature-badge signature-engraver">✓ Gravador</span>';
+            }
+            
+            if (!cartoon.has_author_signature && !cartoon.has_engraver_signature) {
+                badges += '<span class="signature-badge signature-none">Não Assinado</span>';
+            }
+            
+            container.innerHTML = badges;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Zoom controls
+            zoomInBtn.addEventListener('click', () => {
+                if (zoomPan) zoomPan.zoomIn();
+            });
+            
+            zoomOutBtn.addEventListener('click', () => {
+                if (zoomPan) zoomPan.zoomOut();
+            });
+            
+            resetZoomBtn.addEventListener('click', () => {
+                if (zoomPan) zoomPan.resetZoom();
+            });
+            
+            fullscreenBtn.addEventListener('click', openFullscreen);
+            
+            // Fullscreen controls
+            fullscreenClose.addEventListener('click', closeFullscreen);
+            fullscreenOverlay.addEventListener('click', (e) => {
+                if (e.target === fullscreenOverlay) {
+                    closeFullscreen();
+                }
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyPress);
+            
+            // Prevent context menu on image
+            mainImage.addEventListener('contextmenu', (e) => e.preventDefault());
+        }
+
+        // Fullscreen functions
+        function openFullscreen() {
+            if (!cartoon.image_url) return;
+            
+            fullscreenOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFullscreen() {
+            fullscreenOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Keyboard shortcuts
+        function handleKeyPress(e) {
+            switch(e.key) {
+                case 'Escape':
+                    if (fullscreenOverlay.classList.contains('active')) {
+                        closeFullscreen();
+                    } else if (zoomPan) {
+                        zoomPan.resetZoom();
+                    }
+                    break;
+                case '+':
+                case '=':
+                    if (zoomPan) zoomPan.zoomIn();
+                    e.preventDefault();
+                    break;
+                case '-':
+                    if (zoomPan) zoomPan.zoomOut();
+                    e.preventDefault();
+                    break;
+                case '0':
+                    if (zoomPan) zoomPan.resetZoom();
+                    e.preventDefault();
+                    break;
+                case 'f':
+                case 'F':
+                    if (cartoon.image_url && !fullscreenOverlay.classList.contains('active')) {
+                        openFullscreen();
+                    }
+                    break;
+            }
+        }
+
+        // Handle image load errors
+        mainImage.addEventListener('error', () => {
+            mainImage.style.display = 'none';
+            imagePlaceholder.style.display = 'flex';
+            zoomInBtn.disabled = true;
+            fullscreenBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>

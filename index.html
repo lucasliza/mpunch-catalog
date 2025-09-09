@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ptBr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de charges de Melbourne Punch (1855 - 1860)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Catálogo de charges de Melbourne Punch (1855 - 1860)</h1>
+            <p>Elaborado para a dissertação <i>Melbourne Punch: Idealizações de um “mundo britânico” na Austrália colonial (1855-1860)</i></p>
+            <div class="vintage-ornament">⦿ ⦿ ⦿</div>
+            <a href="charts.html" class="nav-link">Ver Estatísticas</a>
+        </div>
+
+        <div class="controls">
+            <div class="search-filter">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Pesquisar por título, autores, temas ou conteúdo..." aria-label="Search cartoons">
+                </div>
+                <select id="categoryFilter">
+                    <option value="">Todos os formatos</option>
+                </select>
+                <select id="authorFilter">
+                    <option value="">Todos os autores</option>
+                </select>
+                <div class="year-range-container">
+                    <div class="year-range-inputs">
+                        <input type="number" id="yearFromFilter" placeholder="From" min="1855" max="1860">
+                        <span class="year-separator">até</span>
+                        <input type="number" id="yearToFilter" placeholder="To" min="1855" max="1860">
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="totalCount">0</h3>
+                    <p>Charges no total</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="categoryCount">0</h3>
+                    <p>Formatos</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="authorCount">0</h3>
+                    <p>Autores</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="yearRange">-</h3>
+                    <p>Recorte temporal</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="signedCount">0</h3>
+                    <p>Obras Assinadas</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="filteredCount">0</h3>
+                    <p>Mostrando</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-info">
+            <span id="resultsText">Carregando charges...</span>
+            <div>
+                <label for="itemsPerPage">Itens por página: </label>
+                <select id="itemsPerPage">
+                    <option value="12">12</option>
+                    <option value="24" selected>24</option>
+                    <option value="48">48</option>
+                    <option value="96">96</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="catalog-grid" id="catalogGrid">
+            <div class="loading">Carregando charges...</div>
+        </div>
+
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="firstPage">&laquo;&laquo;</button>
+            <button id="prevPage">&laquo;</button>
+            <span id="pageNumbers"></span>
+            <button id="nextPage">&raquo;</button>
+            <button id="lastPage">&raquo;&raquo;</button>
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <h3>Nenhuma charge encontrada</h3>
+            <p>Tente ajustar seus critérios de pesquisa</p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-support">
+                Pesquisa conduzida com apoio do Conselho Nacional de Desenvolvimento Científico e Tecnológico (CNPq).
+            </div>
+
+            <div class="footer-disclaimer">
+             As imagens foram aqui reproduzidas com a finalidade acadêmica, sem intuito comercial, e estão disponíveis para consulta no acervo da Biblioteca Nacional da Austrália e através do agregador Trove. Para acesso ao arquivo original, consulte os links presentes nas imagens (quando disponíveis).
+            </div>
+        </div>
+    </footer>
+    <script>
+        // Performance optimization variables
+        let allCartoons = [];
+        let filteredCartoons = [];
+        let currentPage = 1;
+        let itemsPerPage = 24;
+        let searchTimeout;
+        let filterIndexes = {};
+
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const authorFilter = document.getElementById('authorFilter');
+        const yearFromFilter = document.getElementById('yearFromFilter');
+        const yearToFilter = document.getElementById('yearToFilter');
+        const itemsPerPageSelect = document.getElementById('itemsPerPage');
+        const catalogGrid = document.getElementById('catalogGrid');
+        const pagination = document.getElementById('pagination');
+        const noResults = document.getElementById('noResults');
+        const resultsText = document.getElementById('resultsText');
+
+        // Debounced search for performance
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1;
+                filterAndDisplayCartoons();
+            }, 300);
+        }
+
+        // Build search indexes for faster filtering
+        function buildSearchIndexes() {
+            filterIndexes = {
+                categories: new Set(),
+                authors: new Set(),
+                years: new Set(),
+                searchableContent: []
+            };
+
+            allCartoons.forEach((cartoon, index) => {
+                // Build filter sets
+                if (cartoon.category) filterIndexes.categories.add(cartoon.category);
+                if (cartoon.author_name) filterIndexes.authors.add(cartoon.author_name);
+                if (cartoon.year) filterIndexes.years.add(cartoon.year);
+
+                // Build searchable content index
+                const searchableText = [
+                    cartoon.title || '',
+                    cartoon.caption || '',
+                    cartoon.content || '',
+                    cartoon.author_name || '',
+                    cartoon.engraver_name || '',
+                    cartoon.topic || '',
+                    ...(cartoon.themes || [])
+                ].join(' ').toLowerCase();
+
+                filterIndexes.searchableContent[index] = searchableText;
+            });
+
+            // Set year range bounds based on actual data
+            setYearRangeBounds();
+        }
+
+        // Set the year range selector bounds from the actual data
+        function setYearRangeBounds() {
+            if (filterIndexes.years.size > 0) {
+                const years = Array.from(filterIndexes.years).map(y => parseInt(y)).filter(y => !isNaN(y));
+                
+                if (years.length > 0) {
+                    const minYear = Math.min(...years);
+                    const maxYear = Math.max(...years);
+                    
+                    // Set min/max attributes to restrict input range
+                    yearFromFilter.min = minYear;
+                    yearFromFilter.max = maxYear;
+                    yearToFilter.min = minYear;
+                    yearToFilter.max = maxYear;
+                    
+                    // Set placeholders to show the actual data range
+                    yearFromFilter.placeholder = `Desde ${minYear}`;
+                    yearToFilter.placeholder = `Até ${maxYear}`;
+                    
+                    // Update the title attribute for better UX
+                    yearFromFilter.title = `Anos disponíveis: ${minYear} - ${maxYear}`;
+                    yearToFilter.title = `Anos disponíveis: ${minYear} - ${maxYear}`;
+                    
+                    console.log(`Year range set: ${minYear} - ${maxYear}`);
+                } else {
+                    // Fallback if no valid years found
+                    console.log('No valid years found in data');
+                    yearFromFilter.placeholder = 'Desde';
+                    yearToFilter.placeholder = 'Até';
+                }
+            } else {
+                // Fallback if no years at all
+                console.log('No year data found');
+                yearFromFilter.placeholder = 'Desde';
+                yearToFilter.placeholder = 'Até';
+            }
+        }
+
+        // Optimized filtering function
+        function filterCartoons() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const selectedCategory = categoryFilter.value;
+            const selectedAuthor = authorFilter.value;
+            const yearFrom = yearFromFilter.value ? parseInt(yearFromFilter.value) : null;
+            const yearTo = yearToFilter.value ? parseInt(yearToFilter.value) : null;
+
+            // Validate year range
+            if (yearFrom && yearTo && yearFrom > yearTo) {
+                // Swap values if from > to
+                yearFromFilter.value = yearTo;
+                yearToFilter.value = yearFrom;
+                return; // Re-trigger filtering after swap
+            }
+
+            if (!searchTerm && !selectedCategory && !selectedAuthor && !yearFrom && !yearTo) {
+                filteredCartoons = allCartoons;
+                return;
+            }
+
+            filteredCartoons = allCartoons.filter((cartoon, index) => {
+                // Quick category filter
+                if (selectedCategory && cartoon.category !== selectedCategory) return false;
+                
+                // Quick author filter
+                if (selectedAuthor && cartoon.author_name !== selectedAuthor) return false;
+                
+                // Year range filter
+                if (cartoon.year) {
+                    const cartoonYear = parseInt(cartoon.year);
+                    if (!isNaN(cartoonYear)) {
+                        if (yearFrom && cartoonYear < yearFrom) return false;
+                        if (yearTo && cartoonYear > yearTo) return false;
+                    }
+                }
+                
+                // Text search using pre-built index
+                if (searchTerm && !filterIndexes.searchableContent[index].includes(searchTerm)) return false;
+                
+                return true;
+            });
+        }
+
+        // Virtualized display - only render visible items
+        function displayCurrentPage() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredCartoons.length);
+            const currentItems = filteredCartoons.slice(startIndex, endIndex);
+
+            catalogGrid.innerHTML = '';
+
+            if (currentItems.length === 0) {
+                noResults.style.display = 'block';
+                pagination.style.display = 'none';
+                return;
+            }
+
+            noResults.style.display = 'none';
+            pagination.style.display = 'flex';
+
+            // Create and append cards immediately
+            currentItems.forEach((cartoon, index) => {
+                const card = createCartoonCard(cartoon);
+                card.style.animationDelay = `${index * 50}ms`;
+                catalogGrid.appendChild(card);
+            });
+
+            updatePagination();
+            updateResultsInfo();
+        }
+
+        // Optimized card creation
+        function createCartoonCard(cartoon) {
+            const card = document.createElement('div');
+            card.className = 'cartoon-card';
+            card.dataset.cartoonId = cartoon.id;
+            
+            const imageContent = cartoon.image_url ? 
+                `<img src="${cartoon.image_url}" alt="${cartoon.title}" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='🖼️';">` : 
+                '🖼️';
+            
+            const signatureBadges = generateSignatureBadges(cartoon);
+            const themeTags = cartoon.themes ? 
+                cartoon.themes.slice(0, 3).map(theme => `<span class="theme-tag">${theme}</span>`).join('') + 
+                (cartoon.themes.length > 3 ? `<span class="theme-tag">+${cartoon.themes.length - 3}</span>` : '') : '';
+            
+            card.innerHTML = `
+                <div class="card-image">
+                    ${imageContent}
+                </div>
+                <div class="card-content">
+                    <div class="card-title" data-cartoon-id="${cartoon.id}">${cartoon.title}</div>
+                    <div class="card-caption">${cartoon.caption || ''}</div>
+                    <div class="card-description">${cartoon.content || ''}</div>
+                    
+                    <div class="card-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Formato:</span>
+                            <span class="detail-value">${cartoon.category || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Ano:</span>
+                            <span class="detail-value">${cartoon.year || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Autor:</span>
+                            <span class="detail-value">${cartoon.author_name || 'Não identificado'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="signatures">
+                        ${signatureBadges}
+                    </div>
+                    
+                    <div class="card-themes">
+                        ${themeTags}
+                    </div>
+                </div>
+            `;
+            
+            // Add click event listeners
+            card.addEventListener('click', (e) => {
+                openCartoonDetail(cartoon);
+            });
+            
+            return card;
+        }
+
+        function generateSignatureBadges(cartoon) {
+            let badges = '';
+            
+            if (cartoon.has_author_signature) {
+                badges += '<span class="signature-badge signature-author">✓ Autor</span>';
+            }
+            
+            if (cartoon.has_engraver_signature) {
+                badges += '<span class="signature-badge signature-engraver">✓ Gravador</span>';
+            }
+            
+            if (!cartoon.has_author_signature && !cartoon.has_engraver_signature) {
+                badges += '<span class="signature-badge signature-none">Não Assinado</span>';
+            }
+            
+            return badges;
+        }
+
+        // Navigation to detail page
+        function openCartoonDetail(cartoon) {
+            // Store cartoon data in localStorage for the detail page
+            localStorage.setItem('selectedCartoon', JSON.stringify(cartoon));
+            
+            // Navigate to detail page
+            window.location.href = './detail.html';
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredCartoons.length / itemsPerPage);
+            const firstPage = document.getElementById('firstPage');
+            const prevPage = document.getElementById('prevPage');
+            const nextPage = document.getElementById('nextPage');
+            const lastPage = document.getElementById('lastPage');
+            const pageNumbers = document.getElementById('pageNumbers');
+
+            firstPage.disabled = currentPage === 1;
+            prevPage.disabled = currentPage === 1;
+            nextPage.disabled = currentPage === totalPages || totalPages === 0;
+            lastPage.disabled = currentPage === totalPages || totalPages === 0;
+
+            // Generate page numbers
+            let pagesHTML = '';
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pagesHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+            }
+
+            pageNumbers.innerHTML = pagesHTML;
+
+            // Add page number click handlers
+            pageNumbers.querySelectorAll('.page-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentPage = parseInt(e.target.dataset.page);
+                    displayCurrentPage();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+        }
+
+        function updateResultsInfo() {
+            const startIndex = (currentPage - 1) * itemsPerPage + 1;
+            const endIndex = Math.min(currentPage * itemsPerPage, filteredCartoons.length);
+            const totalPages = Math.ceil(filteredCartoons.length / itemsPerPage);
+
+            resultsText.textContent = filteredCartoons.length > 0 ? 
+                `Mostrando ${startIndex}-${endIndex} de ${filteredCartoons.length} charges (Página ${currentPage} de ${totalPages})` :
+                'Nenhuma charge encontrada';
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = allCartoons.length;
+            document.getElementById('filteredCount').textContent = filteredCartoons.length;
+            document.getElementById('categoryCount').textContent = filterIndexes.categories.size;
+            document.getElementById('authorCount').textContent = filterIndexes.authors.size;
+            
+            if (filteredCartoons.length > 0) {
+                const years = filteredCartoons.map(c => c.year).filter(Boolean);
+                if (years.length > 0) {
+                    const minYear = Math.min(...years);
+                    const maxYear = Math.max(...years);
+                    document.getElementById('yearRange').textContent = minYear === maxYear ? minYear : `${minYear}-${maxYear}`;
+                } else {
+                    document.getElementById('yearRange').textContent = '-';
+                }
+                
+                const signedWorks = filteredCartoons.filter(c => c.has_author_signature || c.has_engraver_signature);
+                document.getElementById('signedCount').textContent = signedWorks.length;
+            } else {
+                document.getElementById('yearRange').textContent = '-';
+                document.getElementById('signedCount').textContent = '0';
+            }
+        }
+
+        function populateFilters() {
+            // Clear existing options
+            categoryFilter.innerHTML = '<option value="">Todos os formatos</option>';
+            authorFilter.innerHTML = '<option value="">Todos os autores</option>';
+
+            // Populate from indexes
+            [...filterIndexes.categories].sort().forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+
+            [...filterIndexes.authors].sort().forEach(author => {
+                const option = document.createElement('option');
+                option.value = author;
+                option.textContent = author;
+                authorFilter.appendChild(option);
+            });
+        }
+
+        function filterAndDisplayCartoons() {
+            filterCartoons();
+            updateStats();
+            currentPage = 1;
+            displayCurrentPage();
+        }
+
+        function setupEventListeners() {
+            searchInput.addEventListener('input', debounceSearch);
+            categoryFilter.addEventListener('change', filterAndDisplayCartoons);
+            authorFilter.addEventListener('change', filterAndDisplayCartoons);
+            
+            // Year range inputs with validation
+            yearFromFilter.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                if (value && (value < parseInt(e.target.min) || value > parseInt(e.target.max))) {
+                    e.target.style.borderColor = '#e53e3e';
+                } else {
+                    e.target.style.borderColor = '#cbd5e0';
+                }
+                debounceSearch();
+            });
+            
+            yearToFilter.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                if (value && (value < parseInt(e.target.min) || value > parseInt(e.target.max))) {
+                    e.target.style.borderColor = '#e53e3e';
+                } else {
+                    e.target.style.borderColor = '#cbd5e0';
+                }
+                debounceSearch();
+            });
+
+            itemsPerPageSelect.addEventListener('change', (e) => {
+                itemsPerPage = parseInt(e.target.value);
+                currentPage = 1;
+                displayCurrentPage();
+            });
+
+            // Pagination event listeners
+            document.getElementById('firstPage').addEventListener('click', () => {
+                currentPage = 1;
+                displayCurrentPage();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayCurrentPage();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+
+            document.getElementById('nextPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredCartoons.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayCurrentPage();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+
+            document.getElementById('lastPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredCartoons.length / itemsPerPage);
+                currentPage = totalPages;
+                displayCurrentPage();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        function loadCartoonData() {
+            fetch('./data/cartoons.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`Loaded ${data.length} cartoons from JSON file`);
+                    // Sort by year (oldest first), then by title for consistent ordering
+                    allCartoons = data.sort((a, b) => {
+                        const yearA = parseInt(a.year) || 0;
+                        const yearB = parseInt(b.year) || 0;
+                        if (yearA !== yearB) {
+                            return yearA - yearB; // Oldest first
+                        }
+                        // If years are the same, sort by title
+                        return (a.title || '').localeCompare(b.title || '');
+                    });
+
+                    filteredCartoons = allCartoons;
+                    
+                    // Build indexes and initialize
+                    buildSearchIndexes();
+                    populateFilters();
+                    updateStats();
+                    displayCurrentPage();
+                    setupEventListeners();
+                })
+                .catch(error => {
+                    console.log('Could not load external data file, using sample data:', error.message);
+                    // Use minimal sample data for demo
+                    allCartoons = [
+                        {
+                            id: 1,
+                            title: "Sample Historical Cartoon",
+                            caption: "Demo data for testing",
+                            content: "This is sample data to demonstrate the interface while your actual data loads.",
+                            category: "Demo",
+                            year: 1890,
+                            has_author_signature: true,
+                            has_engraver_signature: false,
+                            author_name: "Demo Author",
+                            engraver_name: "Demo Engraver",
+                            themes: ["Sample", "Demo"],
+                            topic: "Testing"
+                        }
+                    ];
+                    filteredCartoons = allCartoons;
+                    buildSearchIndexes();
+                    populateFilters();
+                    updateStats();
+                    displayCurrentPage();
+                    setupEventListeners();
+                });
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', loadCartoonData);
+    </script>
+</body>
+</html>
