@@ -10,6 +10,38 @@
     <link rel="stylesheet" href="style.css">
     <style>
 
+
+        :root {
+            --primary-color: #3182ce;
+            --secondary-color: #2c5282;
+            --accent-color: #2c7a7b;
+            --background-color: #f7fafc;
+            --text-color: #2d3748;
+            --text-color-muted: #4a5568;
+            --border-color: #e2e8f0;
+            --success-color: #38a169;
+        }
+
+                .nav-link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #fff;
+            background-color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: #2c5282;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(49, 130, 206, 0.4);
+        }
+
         /* Header */
         .header {
             background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
