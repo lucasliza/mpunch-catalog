@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ptBr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,19 +8,36 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <div class="header">
             <h1>Catálogo de charges de Melbourne Punch (1855 - 1860)</h1>
-            <p>Elaborado para a dissertação <i>Melbourne Punch: Idealizações de um “mundo britânico” na Austrália colonial (1855-1860)</i></p>
-            <div class="vintage-ornament">⦿ ⦿ ⦿</div>
-            <a href="charts.html" class="nav-link">Ver Estatísticas</a>
+            <div class="academic-banner">
+                <div class="banner-content">
+                    <div class="research-context">
+                        <span class="site-purpose">Ferramenta de análise desenvolvida para a dissertação:</span>
+                    </div>
+                    <div class="dissertation-title">
+                        <em>Melbourne Punch: Idealizações de um "mundo britânico" na Austrália colonial (1855-1860)</em>
+                    </div>
+                    <div class="academic-credits">
+                        <div class="institution">Universidade Estadual de Campinas - Instituto de Filosofia e Ciências
+                            Humanas - Programa de Pós-Graduação em História</div>
+                        <div class="funding">Pesquisa conduzida com apoio do Conselho Nacional de Desenvolvimento
+                            Científico e Tecnológico (CNPq).</div>
+                    </div>
+                </div>
+            </div>
+
+            <a href="charts.html" class="nav-link">Explorar visualizações de dados</a>
         </div>
 
         <div class="controls">
             <div class="search-filter">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Pesquisar por título, autores, temas ou conteúdo..." aria-label="Search cartoons">
+                    <input type="text" id="searchInput"
+                        placeholder="Pesquisar por título, autores, temas ou conteúdo..." aria-label="Search cartoons">
                 </div>
                 <select id="categoryFilter">
                     <option value="">Todos os formatos</option>
@@ -102,7 +120,9 @@
             </div>
 
             <div class="footer-disclaimer">
-             As imagens foram aqui reproduzidas com a finalidade acadêmica, sem intuito comercial, e estão disponíveis para consulta no acervo da Biblioteca Nacional da Austrália e através do agregador Trove. Para acesso ao arquivo original, consulte os links presentes nas imagens (quando disponíveis).
+                As imagens foram aqui reproduzidas com a finalidade acadêmica, sem intuito comercial, e estão
+                disponíveis para consulta no acervo da Biblioteca Nacional da Austrália e através do agregador Trove.
+                Para acesso ao arquivo original, consulte os links presentes nas imagens (quando disponíveis).
             </div>
         </div>
     </footer>
@@ -173,25 +193,25 @@
         function setYearRangeBounds() {
             if (filterIndexes.years.size > 0) {
                 const years = Array.from(filterIndexes.years).map(y => parseInt(y)).filter(y => !isNaN(y));
-                
+
                 if (years.length > 0) {
                     const minYear = Math.min(...years);
                     const maxYear = Math.max(...years);
-                    
+
                     // Set min/max attributes to restrict input range
                     yearFromFilter.min = minYear;
                     yearFromFilter.max = maxYear;
                     yearToFilter.min = minYear;
                     yearToFilter.max = maxYear;
-                    
+
                     // Set placeholders to show the actual data range
                     yearFromFilter.placeholder = `Desde ${minYear}`;
                     yearToFilter.placeholder = `Até ${maxYear}`;
-                    
+
                     // Update the title attribute for better UX
                     yearFromFilter.title = `Anos disponíveis: ${minYear} - ${maxYear}`;
                     yearToFilter.title = `Anos disponíveis: ${minYear} - ${maxYear}`;
-                    
+
                     console.log(`Year range set: ${minYear} - ${maxYear}`);
                 } else {
                     // Fallback if no valid years found
@@ -231,10 +251,10 @@
             filteredCartoons = allCartoons.filter((cartoon, index) => {
                 // Quick category filter
                 if (selectedCategory && cartoon.category !== selectedCategory) return false;
-                
+
                 // Quick author filter
                 if (selectedAuthor && cartoon.author_name !== selectedAuthor) return false;
-                
+
                 // Year range filter
                 if (cartoon.year) {
                     const cartoonYear = parseInt(cartoon.year);
@@ -243,10 +263,10 @@
                         if (yearTo && cartoonYear > yearTo) return false;
                     }
                 }
-                
+
                 // Text search using pre-built index
                 if (searchTerm && !filterIndexes.searchableContent[index].includes(searchTerm)) return false;
-                
+
                 return true;
             });
         }
@@ -284,16 +304,16 @@
             const card = document.createElement('div');
             card.className = 'cartoon-card';
             card.dataset.cartoonId = cartoon.id;
-            
-            const imageContent = cartoon.image_url ? 
-                `<img src="${cartoon.image_url}" alt="${cartoon.title}" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='🖼️';">` : 
+
+            const imageContent = cartoon.image_url ?
+                `<img src="${cartoon.image_url}" alt="${cartoon.title}" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='🖼️';">` :
                 '🖼️';
-            
+
             const signatureBadges = generateSignatureBadges(cartoon);
-            const themeTags = cartoon.themes ? 
-                cartoon.themes.slice(0, 3).map(theme => `<span class="theme-tag">${theme}</span>`).join('') + 
+            const themeTags = cartoon.themes ?
+                cartoon.themes.slice(0, 3).map(theme => `<span class="theme-tag">${theme}</span>`).join('') +
                 (cartoon.themes.length > 3 ? `<span class="theme-tag">+${cartoon.themes.length - 3}</span>` : '') : '';
-            
+
             card.innerHTML = `
                 <div class="card-image">
                     ${imageContent}
@@ -327,30 +347,30 @@
                     </div>
                 </div>
             `;
-            
+
             // Add click event listeners
             card.addEventListener('click', (e) => {
                 openCartoonDetail(cartoon);
             });
-            
+
             return card;
         }
 
         function generateSignatureBadges(cartoon) {
             let badges = '';
-            
+
             if (cartoon.has_author_signature) {
                 badges += '<span class="signature-badge signature-author">✓ Autor</span>';
             }
-            
+
             if (cartoon.has_engraver_signature) {
                 badges += '<span class="signature-badge signature-engraver">✓ Gravador</span>';
             }
-            
+
             if (!cartoon.has_author_signature && !cartoon.has_engraver_signature) {
                 badges += '<span class="signature-badge signature-none">Não Assinado</span>';
             }
-            
+
             return badges;
         }
 
@@ -358,7 +378,7 @@
         function openCartoonDetail(cartoon) {
             // Store cartoon data in localStorage for the detail page
             localStorage.setItem('selectedCartoon', JSON.stringify(cartoon));
-            
+
             // Navigate to detail page
             window.location.href = './detail.html';
         }
@@ -407,7 +427,7 @@
             const endIndex = Math.min(currentPage * itemsPerPage, filteredCartoons.length);
             const totalPages = Math.ceil(filteredCartoons.length / itemsPerPage);
 
-            resultsText.textContent = filteredCartoons.length > 0 ? 
+            resultsText.textContent = filteredCartoons.length > 0 ?
                 `Mostrando ${startIndex}-${endIndex} de ${filteredCartoons.length} charges (Página ${currentPage} de ${totalPages})` :
                 'Nenhuma charge encontrada';
         }
@@ -417,7 +437,7 @@
             document.getElementById('filteredCount').textContent = filteredCartoons.length;
             document.getElementById('categoryCount').textContent = filterIndexes.categories.size;
             document.getElementById('authorCount').textContent = filterIndexes.authors.size;
-            
+
             if (filteredCartoons.length > 0) {
                 const years = filteredCartoons.map(c => c.year).filter(Boolean);
                 if (years.length > 0) {
@@ -427,7 +447,7 @@
                 } else {
                     document.getElementById('yearRange').textContent = '-';
                 }
-                
+
                 const signedWorks = filteredCartoons.filter(c => c.has_author_signature || c.has_engraver_signature);
                 document.getElementById('signedCount').textContent = signedWorks.length;
             } else {
@@ -468,7 +488,7 @@
             searchInput.addEventListener('input', debounceSearch);
             categoryFilter.addEventListener('change', filterAndDisplayCartoons);
             authorFilter.addEventListener('change', filterAndDisplayCartoons);
-            
+
             // Year range inputs with validation
             yearFromFilter.addEventListener('input', (e) => {
                 const value = parseInt(e.target.value);
@@ -479,7 +499,7 @@
                 }
                 debounceSearch();
             });
-            
+
             yearToFilter.addEventListener('input', (e) => {
                 const value = parseInt(e.target.value);
                 if (value && (value < parseInt(e.target.min) || value > parseInt(e.target.max))) {
@@ -550,7 +570,7 @@
                     });
 
                     filteredCartoons = allCartoons;
-                    
+
                     // Build indexes and initialize
                     buildSearchIndexes();
                     populateFilters();
@@ -566,7 +586,7 @@
                             id: 1,
                             title: "Sample Historical Cartoon",
                             caption: "Demo data for testing",
-                            content: "This is sample data to demonstrate the interface while your actual data loads.",
+                            content: "This is sample data",
                             category: "Demo",
                             year: 1890,
                             has_author_signature: true,
@@ -590,4 +610,5 @@
         document.addEventListener('DOMContentLoaded', loadCartoonData);
     </script>
 </body>
+
 </html>

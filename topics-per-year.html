@@ -98,7 +98,16 @@
             margin-bottom: 2rem;
             border: 1px solid var(--border-color);
         }
-
+        
+        .section-title {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
         .controls-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -299,22 +308,22 @@
             <div class="nav-links">
                 <a href="index.html" class="nav-link">Página Inicial</a>
                 <a href="charts.html" class="nav-link">Hub de Visualizações</a>
-                <a href="themes-cooccurrence.html" class="nav-link">Co-ocorrência de Temas</a>
             </div>
         </header>
 
         <main class="main-content">
             <!-- Controles -->
             <div class="controls-section">
+                <div class="section-title">Filtros</div>
                 <div class="controls-grid">
                     <div class="control-group">
-                        <label class="control-label">Filtrar por Categoria:</label>
+                        <label class="control-label">Categoria:</label>
                         <select id="categoryFilter">
                             <option value="all">Todas as Categorias</option>
                         </select>
                     </div>
                     <div class="control-group">
-                        <label class="control-label">Filtrar por Tópico:</label>
+                        <label class="control-label">Tópico:</label>
                         <select id="topicFilter">
                             <option value="all">Todos os Tópicos</option>
                         </select>
