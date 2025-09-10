@@ -4,19 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalhes da Charge</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Georgia', 'Times New Roman', serif;
-            background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 50%, #3182ce 100%);
-            min-height: 100vh;
-            color: #2d3748;
-        }
 
         .container {
             max-width: 1200px;
@@ -44,7 +33,6 @@
             padding: 12px 20px;
             border-radius: 8px;
             text-decoration: none;
-            font-family: 'Georgia', serif;
             font-weight: 600;
             transition: all 0.3s ease;
             cursor: pointer;
@@ -543,7 +531,7 @@
                                 🔍 Ampliar
                             </button>
                             <button class="zoom-button" id="resetZoomBtn">
-                                ↺ Reset
+                                🔄️ Reset
                             </button>
                             <button class="zoom-button" id="fullscreenBtn">
                                 ⛶ Tela Cheia
@@ -572,7 +560,7 @@
                             <span class="detail-value" id="cartoonYear">-</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Tema:</span>
+                            <span class="detail-label">Assunto:</span>
                             <span class="detail-value" id="cartoonTopic">-</span>
                         </div>
                     </div>
@@ -968,7 +956,7 @@
             // Handle image
             if (cartoon.image_url) {
                 mainImage.src = cartoon.image_url;
-                mainImage.alt = cartoon.title || 'Historical Cartoon';
+                mainImage.alt = cartoon.title || 'Charge de Melbourne Punch';
                 mainImage.style.display = 'block';
                 imagePlaceholder.style.display = 'none';
                 fullscreenImage.src = cartoon.image_url;

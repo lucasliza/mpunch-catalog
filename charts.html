@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estatísticas do Catálogo de Charges</title>
+    <title>Visualização de dados - Melbourne Punch</title>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" />
     <link rel="stylesheet" href="style.css">
@@ -17,14 +17,16 @@
             --card-background: rgba(255, 255, 255, 0.98);
             --border-color: #e2e8f0;
             --text-color-muted: #4a5568;
+            --accent-color: #38b2ac;
+            --success-color: #68d391;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--background-gradient);
-            min-height: 100vh;
-            color: var(--secondary-color);
+            margin: 0;
             padding: 2rem;
+            background: var(--background-gradient);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
         }
 
         .container {
@@ -36,7 +38,6 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 2rem;
         }
 
         /* Header */
@@ -46,12 +47,18 @@
             padding: 2rem;
             border-bottom: 2px solid var(--primary-color);
             text-align: center;
-            border-radius: 12px 12px 0 0;
         }
 
-        h1,
-        h2 {
+        h1 {
             font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+
+        h6 {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
         }
 
         .nav-link {
@@ -65,62 +72,174 @@
             border: 2px solid var(--primary-color);
             border-radius: 8px;
             text-decoration: none;
-            transition: background-color 0.3s ease, transform 0.2s ease;
+            transition: all 0.3s ease;
         }
 
         .nav-link:hover {
             background-color: #2c5282;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(49, 130, 206, 0.4);
         }
 
-        /* Seção de estatísticas */
-        .stats-grid {
+        /* Conteúdo principal */
+        .main-content {
+            padding: 2rem;
+        }
+
+        .intro-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .intro-title {
+            color: var(--secondary-color);
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .intro-description {
+            color: var(--text-color-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Grid de visualizações */
+        .visualizations-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .visualization-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .visualization-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .visualization-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            color: var(--secondary-color);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .card-description {
+            color: var(--text-color-muted);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .card-features {
+            list-style: none;
+            padding: 0;
             margin-bottom: 2rem;
         }
 
-        .stat-card {
-            background-color: #fff;
-            padding: 1rem;
+        .card-features li {
+            color: var(--text-color-muted);
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 0.9rem;
+        }
+
+        .card-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .card-button {
+            display: inline-block;
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            text-decoration: none;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(49, 130, 206, 0.3);
+        }
+
+        .card-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(49, 130, 206, 0.4);
+            background: linear-gradient(135deg, #2c5282, #2c7a7b);
+        }
+
+        .stats-preview {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-item {
             text-align: center;
         }
 
         .stat-number {
-            font-size: 2rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: var(--primary-color);
         }
 
-        .text-gray-600 {
+        .stat-label {
+            font-size: 0.8rem;
             color: var(--text-color-muted);
+            margin-top: 0.2rem;
         }
 
-        /* Seção de gráficos */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .section-title {
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.5rem;
-        }
-
-        #network-container {
-            background-color: #fff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            height: 1000px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .visualizations-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-preview {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
@@ -128,202 +247,78 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>Estatísticas do Catálogo de charges</h1>
-            <p>1855 - 1860</p>
-            <a href="index.html" class="nav-link">Voltar ao Catálogo</a>
+            <h1>Catálogo de charges de Melbourne Punch (1855 - 1860)</h1>
+            <a href="index.html" class="nav-link">Página Inicial</a>
         </header>
 
         <main class="main-content">
-            <div class="chart-section">
-                <div class="chart-controls">
-                    <p class="text-gray-600">
-                        Cada nó representa um tema. A espessura da linha (aresta) indica a frequência com que dois temas
-                        co-ocorrem.
+            <div class="intro-section">
+                <h2 class="intro-title">Explore os dados históricos</h2>
+                <p class="intro-description">
+                    Investigue as charges do Melbourne Punch através de visualizações interativas. 
+                </p>
+            </div>
+
+            <div class="visualizations-grid">
+                <!-- Card 1: Co-ocorrência de Temas -->
+                <div class="visualization-card">
+                    <h3 class="card-title">Co-ocorrência de Temas</h3>
+                    <p class="card-description">
+                        Examine as conexões e relações entre diferentes temas abordados nas charges. 
+                        Esta visualização de rede mostra como os assuntos se interconectam e quais 
+                        combinações de temas eram mais frequentes.
                     </p>
+                    <ul class="card-features">
+                        <li>Rede interativa de temas conectados</li>
+                        <li>Intensidade das conexões por espessura das linhas</li>
+                        <li>Zoom e navegação por arrastar</li>
+                    </ul>
+                    <div class="stats-preview">
+                        <div class="stat-item">
+                            <div class="stat-number">50+</div>
+                            <div class="stat-label">Temas únicos</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">120+</div>
+                            <div class="stat-label">Conexões</div>
+                        </div>
+                    </div>
+                    <a href="themes-cooccurrence.html" class="card-button">
+                        Explorar Co-ocorrências
+                    </a>
                 </div>
-                <div id="network-container"></div>
+
+                <!-- Card 2: Distribuição Temporal -->
+                <div class="visualization-card">
+                    <h3 class="card-title">Distribuição por Ano</h3>
+                    <p class="card-description">
+                        Analise como os diferentes assuntos evoluíram ao longo dos anos de publicação. 
+                        Visualize tendências temporais e identifique períodos de maior atividade 
+                        em temas específicos.
+                    </p>
+                    <ul class="card-features">
+                        <li>Gráficos de barras empilhadas por ano</li>
+                        <li>Filtros por categoria de assunto</li>
+                        <li>Análise de tendências temporais</li>
+                        <li>Comparação entre períodos</li>
+                    </ul>
+                    <div class="stats-preview">
+                        <div class="stat-item">
+                            <div class="stat-number">5</div>
+                            <div class="stat-label">Anos cobertos</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">1000+</div>
+                            <div class="stat-label">Charges</div>
+                        </div>
+                    </div>
+                    <a href="topics-per-year.html" class="card-button">
+                        Ver Distribuição Temporal
+                    </a>
+                </div>
             </div>
         </main>
     </div>
-
-    <script>
-        // --- Global Variables ---
-        let allCartoons = [];
-        let network;
-        let visData; // Adicionada uma variável global para os dados da rede
-
-        // --- Funções de Inicialização ---
-        function loadCartoonData() {
-            fetch('./data/cartoons.json')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log(`Loaded ${data.length} cartoons from JSON file`);
-                    allCartoons = data;
-
-                    renderCoOccurrenceGraph(allCartoons);
-                })
-                .catch(error => {
-                    console.log('Could not load external data file, using sample data:', error.message);
-                    // Use minimal sample data for demo
-                    allCartoons = [
-                        {
-                            id: 1,
-                            title: "Sample Historical Cartoon",
-                            caption: "Demo data for testing",
-                            content: "This is sample data to demonstrate the interface while your actual data loads.",
-                            category: "Demo",
-                            year: 1890,
-                            has_author_signature: true,
-                            has_engraver_signature: false,
-                            author_name: "Demo Author",
-                            engraver_name: "Demo Engraver",
-                            themes: ["Sample", "Demo"],
-                            topic: "Testing"
-                        }
-                    ];
-                    renderCoOccurrenceGraph(allCartoons);
-                });
-        }
-
-        // --- Graph Rendering and Filtering Functions ---
-        function renderCoOccurrenceGraph(data) {
-            // Conta a frequência de cada tema e de cada par de temas
-            const themeCounts = {};
-            const themePairs = {};
-
-            data.forEach(cartoon => {
-                if (cartoon.themes && cartoon.themes.length > 0) {
-                    cartoon.themes.forEach(theme => {
-                        themeCounts[theme] = (themeCounts[theme] || 0) + 1;
-                    });
-
-                    if (cartoon.themes.length > 1) {
-                        cartoon.themes.forEach((theme1, i) => {
-                            cartoon.themes.slice(i + 1).forEach(theme2 => {
-                                const pair = [theme1, theme2].sort().join('-');
-                                themePairs[pair] = (themePairs[pair] || 0) + 1;
-                            });
-                        });
-                    }
-                }
-            });
-
-            // Cria a lista de nós (temas)
-            const nodes = Object.keys(themeCounts).map((theme, index) => ({
-                id: theme,
-                label: theme,
-                value: themeCounts[theme],
-                title: `Ocorrências: ${themeCounts[theme]}`
-            }));
-
-            // Cria a lista de arestas (conexões)
-            const edges = [];
-            for (const pair in themePairs) {
-                const [fromTheme, toTheme] = pair.split('-');
-                const count = themePairs[pair];
-                edges.push({
-                    from: fromTheme,
-                    to: toTheme,
-                    value: count,
-                    title: `Co-ocorrências [${fromTheme}, ${toTheme}]: ${count}`,
-                    color: {
-                        color: '#666',
-                        highlight: '#3182ce'
-                    }
-                });
-            }
-
-            // Cria o objeto de dados para o vis.js
-            visData = {
-                nodes: new vis.DataSet(nodes),
-                edges: new vis.DataSet(edges)
-            };
-
-            // Configura as opções de visualização do gráfico
-            const options = {
-                layout: {
-                    improvedLayout: true,
-                    clusterThreshold: 10000,
-                    hierarchical: {
-                        enabled: false,
-                        levelSeparation: 10,
-                        nodeSpacing: 10000,
-                        treeSpacing: 3000,
-                        blockShifting: true,
-                        edgeMinimization: true,
-                        parentCentralization: true,
-                        direction: 'UD',        // UD, DU, LR, RL
-                        sortMethod: 'hubsize',  // hubsize, directed
-                        shakeTowards: 'leaves'  // roots, leaves
-                    }
-                }, nodes: {
-                    shape: 'dot',
-                    scaling: {
-                        min: 5,
-                        max: 50,
-                        label: {
-                            min: 8,
-                            max: 30,
-                            drawThreshold: 10,
-                            maxVisible: 50,
-                        },
-                    },
-                          font: {
-        size: 12,
-        face: 'Tahoma',
-        background: '#FFFFFF'
-      },
-                },
-                physics: {
-      barnesHut: {
-        gravitationalConstant: -1000000,
-        centralGravity: 1,
-        springLength: 500,
-        avoidOverlap: 1,
-      },
-                },
-                edges: {
-                    arrowStrikethrough: false,
-                    arrows: {
-                        to: {
-                            enabled: false
-                        }
-                    },
-                    scaling: {
-                        min: 0,
-                        max: 10
-                    },
-                    smooth: {
-                        type: 'curvedCW',
-                        roundness: 0
-                    },
-                },
-                interaction: {
-                    hover: true,
-                    tooltipDelay: 200,
-                }
-            };
-
-            // Cria a instância do gráfico
-            const container = document.getElementById('network-container');
-            network = new vis.Network(container, visData, options);
-
-            // Desabilita a física após a rede se estabilizar
-            network.once('stabilized', function () {
-                network.setOptions({ physics: false });
-            });
-        }
-
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCartoonData();
-        });
-    </script>
 </body>
 
 </html>
